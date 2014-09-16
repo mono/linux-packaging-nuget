@@ -3,7 +3,7 @@ Section: cli-mono
 Priority: optional
 Maintainer: Debian CLI Applications Team <pkg-cli-apps-team@lists.alioth.debian.org>
 Uploaders: Jo Shields <directhex@apebox.org>
-Build-Depends: debhelper (>= 7.0.50~)
+Build-Depends: debhelper (>= 7.0.50~), mono-devel (>= 3.2.8), cli-common-dev (>= 0.9~)
 Standards-Version: 3.9.4
 Homepage: http://nuget.org
 Vcs-Git: git://git.debian.org/pkg-cli-apps/packages/nuget.git
