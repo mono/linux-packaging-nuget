@@ -1,3 +1,11 @@
+nuget (2.8.1+md54+dhx1-3) unstable; urgency=medium
+
+  * [bfc4ec1] Add xdt to Libraries: section of pkg-config file. Having it 
+    in Libs: is enough for "mcs -pkg:nuget-core", but xbuild looks at 
+    Libraries:
+
+ -- Jo Shields <jo.shields@xamarin.com>  Wed, 17 Sep 2014 09:49:51 +0100
+
 nuget (2.8.1+md54+dhx1-2) unstable; urgency=medium
 
   * [36c7654] Fix debian/copyright URL
