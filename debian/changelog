@@ -1,3 +1,10 @@
+nuget (2.8.1+md54+dhx1-2) unstable; urgency=medium
+
+  * [36c7654] Fix debian/copyright URL
+  * [b529fb8] Fix pkg-config file
+
+ -- Jo Shields <jo.shields@xamarin.com>  Wed, 17 Sep 2014 09:37:35 +0100
+
 nuget (2.8.1+md54+dhx1-1) unstable; urgency=low
 
   * Initial release
