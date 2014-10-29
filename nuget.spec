@@ -13,14 +13,14 @@
 # published by the Open Source Initiative.
 
 Name:           nuget
-Version:        2.8.1+md54+dhx1
+Version:        2.8.1+md54+dhx3
 Release:        0
 Summary:        Package manager for NuGet repositories
 License:        MIT
 Group:          Development/Libraries/Other
 Url:            http://nuget.org/
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-Source0:        nuget_%{version}.orig.tar.gz
+Source0:        nuget_%{version}.orig.tar.bz2
 Source1:	nuget-core.pc
 Source2:	nuget.sh
 BuildRequires:  mono-devel
@@ -34,7 +34,7 @@ packages. The NuGet Gallery is the central package
 repository used by all package authors and consumers.
 
 %prep
-%setup -n nuget-2.8.1
+%setup -n nuget-%{version}
 
 %build
 %{?exp_env}
