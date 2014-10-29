@@ -1,5 +1,0 @@
-/tmp/nuget-2.8.1/src/Core/obj/Mono Release/.NETFramework,Version=v4.0.AssemblyAttribute.cs
-/tmp/nuget-2.8.1/src/Core/obj/Mono Release/NuGet.Authoring.nuspec.xsd
-/tmp/nuget-2.8.1/src/Core/obj/Mono Release/NuGet.CommonResources.resources
-/tmp/nuget-2.8.1/src/Core/obj/Mono Release/NuGet.Resources.AnalysisResources.resources
-/tmp/nuget-2.8.1/src/Core/obj/Mono Release/NuGet.Resources.NuGetResources.resources
