@@ -7,7 +7,7 @@ RELEASE = 2.8.3+md58+dhx1
 	dh $@  --with cli
 
 override_dh_auto_build:
-	./build-minimal.sh
+	debian/build-minimal.sh
 
 override_dh_install:
 	dh_install
