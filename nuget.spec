@@ -36,7 +36,7 @@ packages. The NuGet Gallery is the central package
 repository used by all package authors and consumers.
 
 %prep
-%setup -n nuget-%{version}
+%setup -n nuget-git
 %patch0 -p1
 
 %build
