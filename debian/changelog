@@ -1,3 +1,12 @@
+nuget (2.8.3+md58+dhx1-0xamarin1) unstable; urgency=medium
+
+  * [47d461f] Add a get-orig-source rule.
+  * [b55d7e9] Imported Upstream version 2.8.3+md58+dhx1
+  * [516fb33] Don't try to distribute build-minimal script in orig.
+  * [45bfc30] Fix up HintPath for XDT
+
+ -- Jo Shields <jo.shields@xamarin.com>  Thu, 26 Feb 2015 11:03:44 +0000
+
 nuget (2.8.1+md54+dhx3-1~xamarin1) unstable; urgency=medium
 
   * Upload to mono-project repository
