@@ -36,11 +36,14 @@ namespace NuGet
             // This is to avoid applying weak event pattern usage, which breaks under Mono or restricted environments, e.g. Windows Azure Web Sites.
             EnvironmentUtility.SetRunningFromCommandLine();
 
-            // Set output encoding to UTF8 if running on Unices. This is not needed on Windows.
-            if (Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX)
-            {
-                System.Console.OutputEncoding = System.Text.Encoding.UTF8;
+            // set output encoding to UTF8 if -utf8 is specified
+            var oldOutputEncoding = System.Console.OutputEncoding;
+            if (args.Any(arg => String.Equals(arg, "-utf8", StringComparison.OrdinalIgnoreCase)))
+            {   
+                args = args.Where(arg => !String.Equals(arg, "-utf8", StringComparison.OrdinalIgnoreCase)).ToArray();
+                SetConsoleOutputEncoding(System.Text.Encoding.UTF8);
             }
+
             var console = new Common.Console();
             var fileSystem = new PhysicalFileSystem(Directory.GetCurrentDirectory());
 
@@ -116,9 +119,21 @@ namespace NuGet
             finally
             {
                 OptimizedZipPackage.PurgeCache();
+                SetConsoleOutputEncoding(oldOutputEncoding);
             }
 
             return 0;
+        }
+
+        private static void SetConsoleOutputEncoding(System.Text.Encoding encoding)
+        {
+            try
+            {
+                System.Console.OutputEncoding = encoding;
+            }
+            catch (IOException)
+            {
+            }
         }
 
         private void Initialize(IFileSystem fileSystem, IConsole console)
@@ -227,6 +242,12 @@ namespace NuGet
             console.IsNonInteractive = !String.IsNullOrEmpty(globalSwitch) ||
                                        !String.IsNullOrEmpty(vsSwitch) ||
                                        (command != null && command.NonInteractive);
+
+            string forceInteractive = Environment.GetEnvironmentVariable("FORCE_NUGET_EXE_INTERACTIVE");
+            if (!String.IsNullOrEmpty(forceInteractive))
+            {
+                console.IsNonInteractive = false;
+            }
 
             if (command != null)
             {

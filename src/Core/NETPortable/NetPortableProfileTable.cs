@@ -210,7 +210,7 @@ namespace NuGet
             }
 
             return LoadPortableProfile(version, profileName, new PhysicalFileSystem(supportedFrameworkDirectory),
-                Directory.GetFiles(supportedFrameworkDirectory, "*.xml"));
+                Directory.EnumerateFiles(supportedFrameworkDirectory, "*.xml"));
         }
 
         internal static NetPortableProfile LoadPortableProfile(string version, string profileName, IFileSystem fileSystem, IEnumerable<string> frameworkFiles)

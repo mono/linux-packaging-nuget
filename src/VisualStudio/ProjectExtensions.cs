@@ -20,6 +20,10 @@ using MsBuildProject = Microsoft.Build.Evaluation.Project;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
 
+#if VS14
+using Microsoft.VisualStudio.ProjectSystem.Interop;
+#endif
+
 namespace NuGet.VisualStudio
 {
     public static class ProjectExtensions
@@ -57,6 +61,7 @@ namespace NuGet.VisualStudio
                 VsConstants.CppProjectTypeGuid,
                 VsConstants.SynergexProjectTypeGuid,
                 VsConstants.NomadForVisualStudioProjectTypeGuid,
+                VsConstants.DxJsProjectTypeGuid
             };
 
         private static readonly char[] PathSeparatorChars = new[] { Path.DirectorySeparatorChar };
@@ -548,6 +553,53 @@ namespace NuGet.VisualStudio
         {
             return VsUtility.IsSupported(project);
         }
+
+        public static bool SupportsINuGetProjectSystem(this Project project)
+        {
+#if VS14
+            return project.ToNuGetProjectSystem() != null;
+#else
+            return false;
+#endif
+        }
+
+#if VS14
+        public static INuGetPackageManager ToNuGetProjectSystem(this Project project)
+        {
+            var vsProject = project.ToVsHierarchy() as IVsProject;
+            if (vsProject == null)
+            {
+                return null;
+            }
+
+            Microsoft.VisualStudio.OLE.Interop.IServiceProvider serviceProvider;
+            int hr = vsProject.GetItemContext(
+                (uint)VSConstants.VSITEMID.Root,
+                out serviceProvider);
+            if (hr < 0)
+            {
+                return null;
+            }
+
+            using (var sp = new ServiceProvider(serviceProvider))
+            {
+                var retValue = sp.GetService(typeof(INuGetPackageManager));
+                if (retValue == null)
+                {
+                    return null;
+                }
+
+                var properties = retValue.GetType().GetProperties().Where(p => p.Name == "Value");
+                if (properties.Count() != 1)
+                {
+                    return null;
+                }
+
+                var v = properties.First().GetValue(retValue) as INuGetPackageManager;
+                return v as INuGetPackageManager;
+            }
+        }
+#endif
 
         public static bool IsExplicitlyUnsupported(this Project project)
         {
