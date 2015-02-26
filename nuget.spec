@@ -13,7 +13,7 @@
 # published by the Open Source Initiative.
 
 Name:           nuget
-Version:        2.8.1+md54+dhx3
+Version:        2.8.3+md58+dhx1
 Release:        0
 Summary:        Package manager for NuGet repositories
 License:        MIT
@@ -23,6 +23,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Source0:        nuget_%{version}.orig.tar.bz2
 Source1:	nuget-core.pc
 Source2:	nuget.sh
+Source3:	build-minimal.sh
+Patch0:		fix_xdt_hintpath
 BuildRequires:  mono-devel
 BuildArch:      noarch
 
@@ -35,11 +37,12 @@ repository used by all package authors and consumers.
 
 %prep
 %setup -n nuget-%{version}
+%patch0 -p1
 
 %build
 %{?exp_env}
 %{?env_options}
-./build-minimal.sh
+%{SOURCE3}
 
 %install
 %{?env_options}
