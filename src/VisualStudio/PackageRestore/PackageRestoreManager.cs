@@ -18,6 +18,14 @@ using Microsoft.VisualStudio.Shell.Interop;
 using NuGet.VisualStudio.Resources;
 using MsBuildProject = Microsoft.Build.Evaluation.Project;
 
+#if VS10 || VS11 || VS12
+using NuGetVS = NuGet.VisualStudio12;
+#endif
+
+#if VS14
+using NuGetVS = NuGet.VisualStudio14;
+#endif
+
 namespace NuGet.VisualStudio
 {
     [Export(typeof(IPackageRestoreManager))]
@@ -112,30 +120,29 @@ namespace NuGet.VisualStudio
 
         public void EnableCurrentSolutionForRestore(bool fromActivation)
         {
-            if (!_solutionManager.IsSolutionOpen)
-            {
-                throw new InvalidOperationException(VsResources.SolutionNotAvailable);
-            }
-
-            if (fromActivation)
-            {
-                // if not in quiet mode, ask user for confirmation before proceeding
-                bool? result = MessageHelper.ShowQueryMessage(
-                    VsResources.PackageRestoreConfirmation,
-                    VsResources.DialogTitle,
-                    showCancelButton: false);
-                if (result != true)
-                {
-                    return;
-                }
-            }
-
             Exception exception = null;
-
             IVsThreadedWaitDialog2 waitDialog;
             _waitDialogFactory.CreateInstance(out waitDialog);
             try
             {
+                if (!_solutionManager.IsSolutionOpen)
+                {
+                    throw new InvalidOperationException(VsResources.SolutionNotAvailable);
+                }
+
+                if (fromActivation)
+                {
+                    // if not in quiet mode, ask user for confirmation before proceeding
+                    bool? result = MessageHelper.ShowQueryMessage(
+                        VsResources.PackageRestoreConfirmation,
+                        VsResources.DialogTitle,
+                        showCancelButton: false);
+                    if (result != true)
+                    {
+                        return;
+                    }
+                }
+
                 // Start the wait dialog on the UI thread
                 InvokeOnUIThread(() =>
                     waitDialog.StartWaitDialog(
@@ -311,7 +318,7 @@ namespace NuGet.VisualStudio
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void EnablePackageRestoreInVs2013(Project project)
         {
-            NuGet.VisualStudio12.ProjectHelper.DoWorkInWriterLock(
+            NuGetVS.ProjectHelper.DoWorkInWriterLock(
                 project,
                 project.ToVsHierarchy(),
                 buildProject => EnablePackageRestore(project, buildProject, saveProjectWhenDone: false));

@@ -18,6 +18,10 @@
     <AssemblyName>NuGet.VisualStudio</AssemblyName>
     <CodeAnalysisRuleSet>..\..\NuGet.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis Condition="'$(EnableCodeAnalysis)'=='true'">true</RunCodeAnalysis>
+    <DefineConstants Condition="'$(VisualStudioVersion)'=='10.0'">$(DefineConstants);VS10</DefineConstants>
+    <DefineConstants Condition="'$(VisualStudioVersion)'=='11.0'">$(DefineConstants);VS11</DefineConstants>
+    <DefineConstants Condition="'$(VisualStudioVersion)'=='12.0'">$(DefineConstants);VS12</DefineConstants>
+    <DefineConstants Condition="'$(VisualStudioVersion)'=='14.0'">$(DefineConstants);VS14</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\Common\MsBuildProjectUtility.cs">
@@ -54,7 +58,9 @@
     <Compile Include="IVsTemplateWizard.cs" />
     <Compile Include="IVsWebsiteHandler.cs" />
     <Compile Include="IWindowSettingsManager.cs" />
+    <Compile Include="NuGetAwareProjectPackageRepository.cs" Condition="$(VisualStudioVersion)=='14.0'" />
     <Compile Include="ProjectSystems\CpsProjectSystem.cs" />
+    <Compile Include="ProjectSystems\NuGetAwareProjectSystem.cs" Condition="$(VisualStudioVersion)=='14.0'" />
     <Compile Include="QuickSearch\NugetSearchProvider.cs" />
     <Compile Include="QuickSearch\NugetSearchTask.cs" />
     <Compile Include="QuickSearch\NuGetStaticSearchResult.cs" />
@@ -163,7 +169,6 @@
     </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="$(ComponentHostAssembly)" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="$(VisualStudioShellAssembly)">
@@ -194,6 +199,11 @@
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.ProjectSystem.Interop" Condition="$(VisualStudioVersion)=='14.0'" >
+      <HintPath>..\..\lib\Microsoft.VisualStudio.ProjectSystem.Interop.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="$(VCProjectEngineAssembly)">
       <HintPath>$(VCProjectEngineAssemblyHintPath)</HintPath>
       <SpecificVersion>True</SpecificVersion>
@@ -283,6 +293,11 @@
     <ProjectReference Include="..\VisualStudio12\VisualStudio12.csproj">
       <Project>{3dd213f7-999b-4c15-9560-bf9c96cb8c52}</Project>
       <Name>VisualStudio12</Name>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\VisualStudio14\VisualStudio14.csproj">
+      <Project>{EEA49A74-6EFC-410E-9745-BAD367AC151D}</Project>
+      <Name>VisualStudio14</Name>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\VsConsole\Console.Types\Console.Types.csproj">

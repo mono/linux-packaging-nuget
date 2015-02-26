@@ -29,7 +29,8 @@ namespace NuGet.VisualStudio
             VsConstants.NemerleProjectTypeGuid,
             VsConstants.WixProjectTypeGuid,
             VsConstants.SynergexProjectTypeGuid,
-            VsConstants.NomadForVisualStudioProjectTypeGuid 
+            VsConstants.NomadForVisualStudioProjectTypeGuid, 
+            VsConstants.DxJsProjectTypeGuid
         };
 
         /// <summary>
@@ -91,6 +92,11 @@ namespace NuGet.VisualStudio
         public static bool IsSupported(Project project)
         {
             Debug.Assert(project != null);
+
+            if (project.SupportsINuGetProjectSystem())
+            {
+                return true;
+            }
 
             return project.Kind != null && _supportedProjectTypes.Contains(project.Kind) && !project.IsSharedProject();
         }

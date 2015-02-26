@@ -151,9 +151,10 @@ namespace NuGet
                 string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
                 if (!String.IsNullOrEmpty(appDataPath))
                 {
-                    var defaultSettingsPath = Path.Combine(appDataPath, "NuGet");
-                    appDataSettings = ReadSettings(new PhysicalFileSystem(defaultSettingsPath),
-                        Constants.SettingsFileName);
+                    var defaultSettingsFilePath = Path.Combine(appDataPath, "NuGet", Constants.SettingsFileName);
+                    appDataSettings = ReadSettings(
+                        fileSystem ?? new PhysicalFileSystem(Directory.GetCurrentDirectory()), 
+                        defaultSettingsFilePath);
                 }
             }
             else
@@ -227,11 +228,6 @@ namespace NuGet
             return settingFiles;
         }
 
-        public string GetValue(string section, string key)
-        {
-            return GetValue(section, key, isPath: false);
-        }
-
         public string GetValue(string section, string key, bool isPath)
         {
             if (String.IsNullOrEmpty(section))
@@ -264,6 +260,24 @@ namespace NuGet
             return ret;
         }
 
+        private static string ResolvePath(string configDirectory, string value)
+        {
+            // Three cases for when Path.IsRooted(value) is true:
+            // 1- C:\folder\file
+            // 2- \\share\folder\file
+            // 3- \folder\file
+            // In the first two cases, we want to honor the fully qualified path
+            // In the last case, we want to return X:\folder\file with X: drive where config file is located.
+            // However, Path.Combine(path1, path2) always returns path2 when Path.IsRooted(path2) == true (which is current case)
+            var root = Path.GetPathRoot(value);
+            // this corresponds to 3rd case
+            if (root != null && root.Length == 1 && (root[0] == Path.DirectorySeparatorChar || value[0] == Path.AltDirectorySeparatorChar))
+            {
+                return Path.Combine(Path.GetPathRoot(configDirectory), value.Substring(1));
+            }
+            return Path.Combine(configDirectory, value);
+        }
+
         private string ElementToValue(XElement element, bool isPath)
         {
             if (element == null)
@@ -277,10 +291,7 @@ namespace NuGet
             {
                 return value;
             }
-            // if value represents a path and relative to this file path was specified, 
-            // append location of file
-            string configDirectory = Path.GetDirectoryName(ConfigFilePath);
-            return _fileSystem.GetFullPath(Path.Combine(configDirectory, value));
+            return _fileSystem.GetFullPath(ResolvePath(Path.GetDirectoryName(ConfigFilePath), value));
         }
 
         private XElement GetValueInternal(string section, string key, XElement curr)
@@ -296,18 +307,7 @@ namespace NuGet
             return FindElementByKey(sectionElement, key, curr);
         }
 
-        public IList<KeyValuePair<string, string>> GetValues(string section)
-        {
-            return GetValues(section, isPath: false);
-        }
-
-        public IList<KeyValuePair<string, string>> GetValues(string section, bool isPath)
-        {
-            var values = GetSettingValues(section, isPath);
-            return values.Select(v => new KeyValuePair<string, string>(v.Key, v.Value)).ToList().AsReadOnly();
-        }
-
-        public IList<SettingValue> GetSettingValues(string section, bool isPath)
+        public IList<SettingValue> GetValues(string section, bool isPath)
         {
             if (String.IsNullOrEmpty(section))
             {
@@ -316,60 +316,63 @@ namespace NuGet
 
             var settingValues = new List<SettingValue>();
             var curr = this;
+            int priority = 0;
             while (curr != null)
             {
-                curr.PopulateValues(section, settingValues, isPath);
+                curr.PopulateValues(section, settingValues, isPath, priority);
                 curr = curr._next;
+                ++priority;
             }
    
             return settingValues.AsReadOnly();
         }
 
-        private void PopulateValues(string section, List<SettingValue> current, bool isPath)
+        private void PopulateValues(string section, List<SettingValue> current, bool isPath, int priority)
         {
             var sectionElement = GetSection(_config.Root, section);
             if (sectionElement != null)
             {
-                ReadSection(sectionElement, current, isPath);
+                ReadSection(sectionElement, current, isPath, priority);
             }
         }
 
-        public IList<KeyValuePair<string, string>> GetNestedValues(string section, string key)
+        public IList<SettingValue> GetNestedValues(string section, string subsection)
         {
             if (String.IsNullOrEmpty(section))
             {
                 throw new ArgumentException(CommonResources.Argument_Cannot_Be_Null_Or_Empty, "section");
             }
 
-            if (String.IsNullOrEmpty(key))
+            if (String.IsNullOrEmpty(subsection))
             {
-                throw new ArgumentException(CommonResources.Argument_Cannot_Be_Null_Or_Empty, "key");
+                throw new ArgumentException(CommonResources.Argument_Cannot_Be_Null_Or_Empty, "subsection");
             }
 
             var values = new List<SettingValue>();
             var curr = this;
+            int priority = 0;
             while (curr != null)
             {
-                curr.PopulateNestedValues(section, key, values);
+                curr.PopulateNestedValues(section, subsection, values, priority);
                 curr = curr._next;
             }
 
-            return values.Select(v => new KeyValuePair<string, string>(v.Key, v.Value)).ToList().AsReadOnly();
+            return values;
         }
 
-        private void PopulateNestedValues(string section, string key, List<SettingValue> current)
+        private void PopulateNestedValues(string section, string subsection, List<SettingValue> current, int priority)
         {
             var sectionElement = GetSection(_config.Root, section);
             if (sectionElement == null)
             {
                 return;
             }
-            var subSection = GetSection(sectionElement, key);
-            if (subSection == null)
+            var subsectionElement = GetSection(sectionElement, subsection);
+            if (subsectionElement == null)
             {
                 return;
             }
-            ReadSection(subSection, current, isPath: false);
+            ReadSection(subsectionElement, current, isPath: false, priority: priority);
         }
 
         public void SetValue(string section, string key, string value)
@@ -551,7 +554,11 @@ namespace NuGet
             return true;
         }
 
-        private void ReadSection(XContainer sectionElement, ICollection<SettingValue> values, bool isPath)
+        private void ReadSection(
+            XContainer sectionElement,
+            ICollection<SettingValue> values,
+            bool isPath,
+            int priority)
         {
             var elements = sectionElement.Elements();
 
@@ -561,7 +568,7 @@ namespace NuGet
                 if (elementName.Equals("add", StringComparison.OrdinalIgnoreCase))
                 {
                     var v = ReadValue(element, isPath);
-                    values.Add(new SettingValue(v.Key, v.Value, _isMachineWideSettings));
+                    values.Add(new SettingValue(v.Key, v.Value, _isMachineWideSettings, priority));
                 }
                 else if (elementName.Equals("clear", StringComparison.OrdinalIgnoreCase))
                 {
