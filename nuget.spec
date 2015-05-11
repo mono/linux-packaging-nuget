@@ -14,7 +14,7 @@
 
 Name:           nuget
 Version:        2.8.3+md58+dhx1
-Release:        0
+Release:        1.xamarin1
 Summary:        Package manager for NuGet repositories
 License:        MIT
 Group:          Development/Libraries/Other
