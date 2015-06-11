@@ -1,3 +1,9 @@
+nuget (2.8.5+md59+dhx1-0xamarin1) unstable; urgency=medium
+
+  * [166ac77] Imported Upstream version 2.8.5+md59+dhx1
+
+ -- Jo Shields <jo.shields@xamarin.com>  Thu, 11 Jun 2015 09:20:37 +0100
+
 nuget (2.8.3+md58+dhx1-0xamarin1) unstable; urgency=medium
 
   * [47d461f] Add a get-orig-source rule.
