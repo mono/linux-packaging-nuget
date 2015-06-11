@@ -1,3 +1,9 @@
+using EnvDTE;
+using Microsoft.CSharp.RuntimeBinder;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using NuGet.VisualStudio.Resources;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,11 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
-using EnvDTE;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using NuGet.VisualStudio.Resources;
 using MsBuildProject = Microsoft.Build.Evaluation.Project;
 using MsBuildProjectItem = Microsoft.Build.Evaluation.ProjectItem;
 using Project = EnvDTE.Project;
@@ -216,9 +217,7 @@ namespace NuGet.VisualStudio
                 }
 
                 if (reference != null)
-                {
-                    TrySetCopyLocal(reference);
-
+                {   
                     // This happens if the assembly appears in any of the search paths that VS uses to locate assembly references.
                     // Most commonly, it happens if this assembly is in the GAC or in the output path.
                     if (reference.Path != null && !reference.Path.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
@@ -241,10 +240,18 @@ namespace NuGet.VisualStudio
                                 // Add the <HintPath> metadata item as a relative path
                                 item.SetMetadataValue("HintPath", referencePath);
 
+                                // Set <Private> to true
+                                item.SetMetadataValue("Private", "True");
+
                                 // Save the project after we've modified it.
                                 Project.Save(this);
                             }
                         }
+                    }
+                    else
+                    {
+                        TrySetSpecificVersion(reference);
+                        TrySetCopyLocal(reference);
                     }
                 }
 
@@ -503,6 +510,10 @@ namespace NuGet.VisualStudio
             // Always set copy local to true for references that we add
             try
             {
+                // In order to properly write this to MSBuild in ALL cases, we have to trigger the Property Change
+                // notification with a new value of "true". However, "true" is the default value, so in order to
+                // cause a notification to fire, we have to set it to false and then back to true
+                reference.CopyLocal = false;
                 reference.CopyLocal = true;
             }
             catch (NotSupportedException)
@@ -510,6 +521,31 @@ namespace NuGet.VisualStudio
 
             }
             catch (NotImplementedException)
+            {
+
+            }
+        }
+
+        // Set SpecificVersion to true
+        private static void TrySetSpecificVersion(dynamic reference)
+        {
+            // Always set SpecificVersion to true for references that we add
+            try
+            {
+                reference.SpecificVersion = false;
+                reference.SpecificVersion = true;
+            }
+            catch (NotSupportedException)
+            {
+
+            }
+            catch (NotImplementedException)
+            {
+
+            }
+            // 'Microsoft.VisualStudio.FSharp.ProjectSystem.Automation.OAAssemblyReference' does not contain
+            // a definition for 'SpecificVersion'.
+            catch (RuntimeBinderException)
             {
 
             }
