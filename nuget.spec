@@ -13,7 +13,7 @@
 # published by the Open Source Initiative.
 
 Name:           nuget
-Version:        2.8.5+md59+dhx1
+Version:        2.8.7+md510+dhx1
 Release:        0.xamarin.1
 Summary:        Package manager for NuGet repositories
 License:        MIT
