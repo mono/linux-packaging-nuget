@@ -1,3 +1,10 @@
+nuget (2.8.7+md510+dhx1-0xamarin1) unstable; urgency=medium
+
+  * [4ad4c67] Imported Upstream version 2.8.7+md510+dhx1
+  * [2b70551] Refresh patch
+
+ -- Jo Shields <jo.shields@xamarin.com>  Wed, 02 Sep 2015 15:30:21 +0100
+
 nuget (2.8.5+md59+dhx1-0xamarin1) unstable; urgency=medium
 
   * [166ac77] Imported Upstream version 2.8.5+md59+dhx1
