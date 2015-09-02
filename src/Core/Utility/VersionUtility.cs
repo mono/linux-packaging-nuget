@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,14 +18,16 @@ namespace NuGet
         private const string NetFrameworkIdentifier = ".NETFramework";
         private const string NetCoreFrameworkIdentifier = ".NETCore";
         private const string PortableFrameworkIdentifier = ".NETPortable";
+        private const string NetPlatformFrameworkIdentifier = ".NETPlatform";
+        private const string NetPlatformFrameworkShortName = "dotnet";
         private const string AspNetFrameworkIdentifier = "ASP.Net";
         private const string AspNetCoreFrameworkIdentifier = "ASP.NetCore";
         private const string DnxFrameworkIdentifier = "DNX";
         private const string DnxFrameworkShortName = "dnx";
         private const string DnxCoreFrameworkIdentifier = "DNXCore";
         private const string DnxCoreFrameworkShortName = "dnxcore";
-        private const string CoreFrameworkIdentifier = "Core";
-        private const string CoreFrameworkShortName = "core";
+        private const string UAPFrameworkIdentifier = "UAP";
+        private const string UAPFrameworkShortName = "uap";
         private const string LessThanOrEqualTo = "\u2264";
         private const string GreaterThanOrEqualTo = "\u2265";
 
@@ -94,8 +97,12 @@ namespace NuGet
             { DnxFrameworkShortName, DnxFrameworkIdentifier },
             { DnxCoreFrameworkShortName, DnxCoreFrameworkIdentifier },
 
-            // Core
-            { CoreFrameworkShortName, CoreFrameworkIdentifier },
+            // Dotnet
+            { NetPlatformFrameworkShortName, NetPlatformFrameworkIdentifier },
+            { NetPlatformFrameworkIdentifier, NetPlatformFrameworkIdentifier },
+
+            // UAP
+            { UAPFrameworkShortName, UAPFrameworkIdentifier },
 
             // Native
             { "native", "native"},
@@ -117,6 +124,8 @@ namespace NuGet
             { "Xamarin.PlayStationVita", "Xamarin.PlayStationVita" },
             { "XamarinPlayStationVita", "Xamarin.PlayStationVita" },
             { "XamarinPSVita", "Xamarin.PlayStationVita" },
+            { "Xamarin.WatchOS", "Xamarin.WatchOS" },
+            { "XamarinWatchOS", "Xamarin.WatchOS" },
             { "Xamarin.XboxThreeSixty", "Xamarin.Xbox360" },
             { "XamarinXboxThreeSixty", "Xamarin.Xbox360" },
             { "Xamarin.XboxOne", "Xamarin.XboxOne" },
@@ -136,11 +145,12 @@ namespace NuGet
             { ".NETMicroFramework", "netmf" },
             { DnxFrameworkIdentifier, DnxFrameworkShortName },
             { DnxCoreFrameworkIdentifier, DnxCoreFrameworkShortName },
-            { CoreFrameworkIdentifier, CoreFrameworkShortName },
+            { NetPlatformFrameworkIdentifier, NetPlatformFrameworkShortName },
             { AspNetFrameworkIdentifier, "aspnet" },
             { AspNetCoreFrameworkIdentifier, "aspnetcore" },
             { "Silverlight", "sl" },
-            { ".NETCore", "win"},
+            { ".NETCore45", "win"},
+            { ".NETCore451", "win81"},
             { "Windows", "win"},
             { ".NETPortable", "portable" },
             { "WindowsPhone", "wp"},
@@ -150,8 +160,9 @@ namespace NuGet
             { "Xamarin.PlayStation3", "xamarinpsthree" },
             { "Xamarin.PlayStation4", "xamarinpsfour" },
             { "Xamarin.PlayStationVita", "xamarinpsvita" },
+            { "Xamarin.WatchOS", "xamarinwatchos" },
             { "Xamarin.Xbox360", "xamarinxboxthreesixty" },
-            { "Xamarin.XboxOne", "xamarinxboxone" }
+            { "Xamarin.XboxOne", "xamarinxboxone" },
         };
 
         private static readonly Dictionary<string, string> _identifierToProfileFolder = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
@@ -206,7 +217,7 @@ namespace NuGet
             { DnxFrameworkIdentifier, new FrameworkName(AspNetFrameworkIdentifier, MaxVersion) },
 
             // Allow a net package to be installed in an aspnet (or dnx, transitively by above) project
-            { AspNetFrameworkIdentifier, new FrameworkName(NetFrameworkIdentifier, MaxVersion) }
+            { AspNetFrameworkIdentifier, new FrameworkName(NetFrameworkIdentifier, MaxVersion) },
         };
 
         public static Version DefaultTargetFrameworkVersion
@@ -319,7 +330,8 @@ namespace NuGet
                     return UnsupportedFrameworkName;
                 }
 
-                version = _emptyVersion;
+                // Use 5.0 instead of 0.0 as the default for NetPlatform
+                version = identifierPart.Equals(NetPlatformFrameworkIdentifier) ? new Version(5, 0) : _emptyVersion;
             }
 
             if (String.IsNullOrEmpty(identifierPart))
@@ -616,6 +628,14 @@ namespace NuGet
                 }
             }
 
+            if (frameworkName.Version.Major == 5 
+                && frameworkName.Version.Minor == 0
+                && frameworkName.Identifier.Equals(NetPlatformFrameworkIdentifier, StringComparison.OrdinalIgnoreCase))
+            {
+                // Normalize version 5.0 to 0.0 for display purposes for dotnet
+                frameworkName = new FrameworkName(frameworkName.Identifier, _emptyVersion, frameworkName.Profile);
+            }
+
             string name;
             if (!_identifierToFrameworkFolder.TryGetValue(frameworkName.Identifier, out name))
             {
@@ -642,7 +662,19 @@ namespace NuGet
                 if (frameworkName.Version > new Version())
                 {
                     // Remove the . from versions
-                    name += frameworkName.Version.ToString().Replace(".", String.Empty);
+                    if (frameworkName.Version.Major > 9 
+                        || frameworkName.Version.Minor > 9 
+                        || frameworkName.Version.Revision > 9 
+                        || frameworkName.Version.Build > 9)
+                    {
+                        // This version has digits over 10 and must be expressed using decimals
+                        name += GetDecimalVersionString(frameworkName.Version);
+                    }
+                    else
+                    {
+                        // Express the version without decimals
+                        name += frameworkName.Version.ToString().Replace(".", String.Empty);
+                    }
                 }
 
                 if (String.IsNullOrEmpty(frameworkName.Profile))
@@ -657,6 +689,53 @@ namespace NuGet
             }
 
             return name + "-" + profile;
+        }
+
+        private static string GetDecimalVersionString(Version version)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (version != null)
+            {
+                Stack<int> versionParts = new Stack<int>();
+
+                versionParts.Push(version.Major > 0 ? version.Major : 0);
+                versionParts.Push(version.Minor > 0 ? version.Minor : 0);
+                versionParts.Push(version.Build > 0 ? version.Build : 0);
+                versionParts.Push(version.Revision > 0 ? version.Revision : 0);
+
+                // if any parts of the version are over 9 we need to use decimals
+                bool useDecimals = versionParts.Any(x => x > 9);
+
+                // remove all trailing zeros
+                while (versionParts.Count > 0 && versionParts.Peek() <= 0)
+                {
+                    versionParts.Pop();
+                }
+
+                // write the version string out backwards
+                while (versionParts.Count > 0)
+                {
+                    // avoid adding a decimal if this is the first digit, but if we are down 
+                    // to only 2 numbers left we have to add a decimal otherwise 10.0 becomes 1.0
+                    // during the parse
+                    if (useDecimals)
+                    {
+                        if (sb.Length > 0)
+                        {
+                            sb.Insert(0, ".");
+                        }
+                        else if (versionParts.Count == 1)
+                        {
+                            sb.Append(".0");
+                        }
+                    }
+
+                    sb.Insert(0, versionParts.Pop());
+                }
+            }
+
+            return sb.ToString();
         }
 
         public static string GetTargetFrameworkLogString(FrameworkName targetFramework)
@@ -749,6 +828,7 @@ namespace NuGet
             return null;
         }
 
+        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         public static bool TryGetCompatibleItems<T>(FrameworkName projectFramework, IEnumerable<T> items, out IEnumerable<T> compatibleItems) where T : IFrameworkTargetable
         {
             if (!items.Any())
