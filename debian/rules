@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
-ACTIVEBRANCH = 2.8.3-monodevelop
-RELEASE = 2.8.3+md58+dhx1
+ACTIVEBRANCH = 9e2d2c1cc09d2a40eeb72e8c5db789e3b9bf2586
+RELEASE = 2.12+mono
 
 %:
 	dh $@  --with cli
@@ -24,9 +24,9 @@ override_dh_clean:
 
 get-orig-source:
 	rm -fr nuget-git/
-	git clone https://github.com/mrward/nuget.git nuget-git
+	git clone --recursive https://github.com/mono/nuget.git nuget-git
 	cd nuget-git && git checkout $(ACTIVEBRANCH)
 	cd nuget-git && git submodule init && git submodule update
-	rm -fr nuget-git/FxCop/ nuget-git/lib/ nuget-git/test/ nuget-git/Tools/ nuget-git/.git* nuget-git/*/.git*
+	rm -fr nuget-git/FxCop/ nuget-git/lib/ nuget-git/test/ nuget-git/Tools/ nuget-git/NuGet.Client/test/ nuget-git/NuGet.Client/lib/ nuget-git/.git* nuget-git/*/.git*
 	tar cjvf nuget_$(RELEASE).orig.tar.bz2 nuget-git/
 	rm -fr nuget-git/
