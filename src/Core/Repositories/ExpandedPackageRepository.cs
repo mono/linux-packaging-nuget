@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using NuGet.Resources;
 
 namespace NuGet
 {
@@ -25,6 +27,8 @@ namespace NuGet
         {
             _fileSystem = fileSystem;
             _hashProvider = hashProvider;
+
+            Logger = fileSystem.Logger;
         }
 
         public override string Source
@@ -95,7 +99,32 @@ namespace NuGet
                 if (SemanticVersion.TryParse(versionDirectoryName, out version) &&
                     Exists(packageId, version))
                 {
-                    yield return GetPackageInternal(packageId, version);
+                    IPackage package = null;
+
+                    try
+                    {
+                        package = GetPackageInternal(packageId, version);
+                    }
+                    catch (XmlException ex)
+                    {
+                        Logger.Log(MessageLevel.Warning, ex.Message);
+                        Logger.Log(
+                            MessageLevel.Warning, 
+                            NuGetResources.Manifest_NotFound, 
+                            string.Format("{0}/{1}", packageId, version));
+                        continue;
+                    }
+                    catch (IOException ex)
+                    {
+                        Logger.Log(MessageLevel.Warning, ex.Message);
+                        Logger.Log(
+                            MessageLevel.Warning, 
+                            NuGetResources.Manifest_NotFound, 
+                            string.Format("{0}/{1}", packageId, version));
+                        continue;
+                    }
+
+                    yield return package;
                 }
             }
         }

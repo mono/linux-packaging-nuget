@@ -51,11 +51,10 @@ namespace Microsoft.Web.XmlTransform
         protected void RemoveNode() {
             CommonErrors.ExpectNoArguments(Log, TransformNameShort, ArgumentString);
 
-            string targetNodeName = TargetNode.Name;
             XmlNode parentNode = TargetNode.ParentNode;
             parentNode.RemoveChild(TargetNode);
 
-            Log.LogMessage(MessageType.Verbose, SR.XMLTRANSFORMATION_TransformMessageRemove, targetNodeName);
+            Log.LogMessage(MessageType.Verbose, SR.XMLTRANSFORMATION_TransformMessageRemove, TargetNode.Name);
         }
     }
 

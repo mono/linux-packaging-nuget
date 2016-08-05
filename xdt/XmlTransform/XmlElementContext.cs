@@ -224,7 +224,7 @@ namespace Microsoft.Web.XmlTransform
                         attributesToRemove.Add(attribute);
                     }
                     else {
-                        attribute.Prefix = String.Empty;
+                        attribute.Prefix = null;
                     }
                 }
                 foreach (XmlAttribute attributeToRemove in attributesToRemove) {
