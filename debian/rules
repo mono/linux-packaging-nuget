@@ -9,6 +9,9 @@ RELEASE = 2.12+mono
 override_dh_auto_build:
 	debian/build-minimal.sh
 
+override_dh_auto_install:
+	true
+
 override_dh_install:
 	dh_install
 	install -D -m 755 debian/nuget.sh debian/nuget/usr/bin/nuget
