@@ -1,3 +1,18 @@
+nuget (2.12+mono-0xamarin1) beta; urgency=medium
+
+  * [35aff80] Update get-orig-source for this release
+  * [b8a9afc] Imported Upstream version 2.12+mono
+  * [01b0baf] Skip dh_auto_install, as supplied Makefile doesn't handle DESTDIR
+
+ -- Jo Shields <jo.shields@xamarin.com>  Fri, 05 Aug 2016 14:02:55 +0100
+
+nuget (2.12+mono-0xamarin1) unstable; urgency=medium
+
+  * [35aff80] Update get-orig-source for this release
+  * [b8a9afc] Imported Upstream version 2.12+mono
+
+ -- Jo Shields <jo.shields@xamarin.com>  Fri, 05 Aug 2016 14:00:05 +0100
+
 nuget (2.8.7+md510+dhx1-0xamarin1) unstable; urgency=medium
 
   * [4ad4c67] Imported Upstream version 2.8.7+md510+dhx1
