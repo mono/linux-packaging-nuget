@@ -1,0 +1,38 @@
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
+namespace NuGet.Configuration
+{
+    public static class NuGetConstants
+    {
+        public static readonly string NuGetHostName = "nuget.org";
+
+        public static readonly string V3FeedUrl = "https://api.nuget.org/v3/index.json";
+        public static readonly string V2FeedUrl = "https://www.nuget.org/api/v2/";
+        public static readonly string V2LegacyOfficialPackageSourceUrl = "https://nuget.org/api/v2/";
+        public static readonly string V2LegacyFeedUrl = "https://go.microsoft.com/fwlink/?LinkID=230477";
+
+        public static readonly string V1FeedUrl = "https://go.microsoft.com/fwlink/?LinkID=206669";
+        public static readonly string DefaultGalleryServerUrl = "https://www.nuget.org";
+        public static readonly string DefaultSymbolServerUrl = "https://nuget.smbsrc.net/";
+
+        public static readonly string ReadmeFileName = "readme.txt";
+        public static readonly string NuGetSolutionSettingsFolder = ".nuget";
+
+        public static readonly string PackageExtension = ".nupkg";
+        public static readonly string SymbolsExtension = ".symbols" + PackageExtension;
+        public static readonly string ManifestExtension = ".nuspec";
+        public static readonly string PackageReferenceFile = "packages.config";
+
+        public static readonly string FeedName = "nuget.org";
+
+        public static readonly string AddV3TrackFile = "nugetorgadd.trk";
+
+        public static readonly string DefaultConfigContent = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <packageSources>
+    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" protocolVersion=""3"" />
+  </packageSources>
+</configuration>";
+    }
+}

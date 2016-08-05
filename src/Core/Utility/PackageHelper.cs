@@ -12,7 +12,35 @@ namespace NuGet
     {
         public static bool IsManifest(string path)
         {
-            return Path.GetExtension(path).Equals(Constants.ManifestExtension, StringComparison.OrdinalIgnoreCase);
+            var extension = Path.GetExtension(path);
+            return extension != null
+                && extension.Equals(Constants.ManifestExtension, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsPackageManifest(string path, string packageId)
+        {
+            var fileName = Path.GetFileName(path);
+
+            // If the package ID couldn't be determined due to an XML exception, the identifier
+            // will be null.  In that case, just return a bool for whether it was a nuspec file
+            // without matching on the packageId
+            if (packageId == null)
+            {
+                return fileName != null
+                && fileName.EndsWith(Constants.ManifestExtension, StringComparison.OrdinalIgnoreCase);
+            }
+
+            var expectedFileName = packageId + Constants.ManifestExtension;
+            return fileName != null
+                && string.Equals(fileName, expectedFileName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsUnzippedPackageManifest(string path, string packageId, SemanticVersion packageVersion)
+        {
+            var fileName = Path.GetFileName(path);
+            var expectedFileName = packageId + "." + packageVersion.ToNormalizedString() + Constants.ManifestExtension;
+            return fileName != null
+                && string.Equals(fileName, expectedFileName, StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsPackageFile(string path)
@@ -27,9 +55,9 @@ namespace NuGet
                    path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification="We need to return the runtime package.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification = "We need to return the runtime package.")]
         public static bool IsSatellitePackage(
-            IPackageMetadata package, 
+            IPackageMetadata package,
             IPackageRepository repository,
             FrameworkName targetFramework,
             out IPackage runtimePackage)

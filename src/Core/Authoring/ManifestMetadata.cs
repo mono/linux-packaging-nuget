@@ -125,12 +125,16 @@ namespace NuGet
                     return null;
                 }
 
-                if (DependencySets.Any(set => set.TargetFramework != null))
+                // Write out groups using the post 2.5 format if there are multiple TxMs or if include/exclude are used
+                if (DependencySets.Any(set => set.TargetFramework != null
+                    ||set.Dependencies.Any(dependency => dependency.Exclude != null 
+                        || dependency.Include != null)))
                 {
                     return DependencySets.Cast<object>().ToList();
                 }
                 else
                 {
+                    // Legacy flat list format
                     return DependencySets.SelectMany(set => set.Dependencies).Cast<object>().ToList();
                 }
             }
@@ -191,6 +195,45 @@ namespace NuGet
         [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly", Justification = "This is needed for xml serialization")]
         [XmlIgnore]
         public List<ManifestReferenceSet> ReferenceSets { get; set; }
+
+        [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "value", Justification = "The propert setter is not supported.")]
+        [SuppressMessage("Microsoft.Design", "CA1002:DoNotExposeGenericLists", Justification = "It's easier to create a list")]
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly", Justification = "This is needed for xml serialization")]
+        [XmlArray("contentFiles", IsNullable = false)]
+        [XmlArrayItem("files", typeof(ManifestContentFiles))]
+        public List<object> ContentFilesSerialize
+        {
+            get
+            {
+                if (ContentFiles == null || ContentFiles.Count == 0)
+                {
+                    return null;
+                }
+                return ContentFiles.Cast<object>().ToList();
+            }
+            set
+            {
+                // this property is only used for serialization.
+                throw new InvalidOperationException();
+            }
+        }
+
+        private List<ManifestContentFiles> _contentFiles;
+        [SuppressMessage("Microsoft.Design", "CA1002:DoNotExposeGenericLists", Justification = "It's easier to create a list")]
+        [SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly", Justification = "This is needed for xml serialization")]
+        [XmlIgnore]
+        public List<ManifestContentFiles> ContentFiles
+        {
+            get
+            {
+                return _contentFiles ?? new List<ManifestContentFiles>();
+            }
+
+            set
+            {
+                _contentFiles = value;
+            }
+        }
 
         SemanticVersion IPackageName.Version
         {
@@ -391,7 +434,9 @@ namespace NuGet
             var dependencies = from d in manifestDependencySet.Dependencies
                                select new PackageDependency(
                                    d.Id,
-                                   String.IsNullOrEmpty(d.Version) ? null : VersionUtility.ParseVersionSpec(d.Version));
+                                   String.IsNullOrEmpty(d.Version) ? null : VersionUtility.ParseVersionSpec(d.Version),
+                                   d.Include,
+                                   d.Exclude);
 
             return new PackageDependencySet(targetFramework, dependencies);
         }

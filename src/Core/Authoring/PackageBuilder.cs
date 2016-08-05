@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NuGet.Resources;
 
 namespace NuGet
@@ -53,6 +52,7 @@ namespace NuGet
             Files = new Collection<IPackageFile>();
             DependencySets = new Collection<PackageDependencySet>();
             FrameworkReferences = new Collection<FrameworkAssemblyReference>();
+            ContentFiles = new Collection<ManifestContentFiles>();
             PackageAssemblyReferences = new Collection<PackageReferenceSet>();
             Authors = new HashSet<string>();
             Owners = new HashSet<string>();
@@ -173,6 +173,15 @@ namespace NuGet
             private set;
         }
 
+        /// <summary>
+        /// ContentFiles section from the manifest for content v2
+        /// </summary>
+        public Collection<ManifestContentFiles> ContentFiles
+        {
+            get;
+            private set;
+        }
+
         public ICollection<PackageReferenceSet> PackageAssemblyReferences
         {
             get;
@@ -247,7 +256,7 @@ namespace NuGet
             using (Package package = Package.Open(stream, FileMode.Create))
             {
                 // Validate and write the manifest
-                WriteManifest(package, DetermineMinimumSchemaVersion(Files));
+                WriteManifest(package, DetermineMinimumSchemaVersion(Files, DependencySets));
 
                 // Write the files to the package
                 WriteFiles(package);
@@ -281,8 +290,16 @@ namespace NuGet
             return String.Join(";", creatorInfo);
         }
 
-        private static int DetermineMinimumSchemaVersion(Collection<IPackageFile> Files)
+        private static int DetermineMinimumSchemaVersion(
+            Collection<IPackageFile> Files, 
+            Collection<PackageDependencySet> package)
         {
+            if (HasContentFilesV2(Files) || HasIncludeExclude(package))
+            {
+                // version 5
+                return ManifestVersionUtility.XdtTransformationVersion;
+            }
+
             if (HasXdtTransformFile(Files))
             {
                 // version 5
@@ -319,6 +336,20 @@ namespace NuGet
                      f.EffectivePath == Constants.PackageEmptyFileName);
 
             return hasEmptyLibFolder;
+        }
+
+        private static bool HasContentFilesV2(ICollection<IPackageFile> contentFiles)
+        {
+            return contentFiles.Any(file =>
+                file.Path != null &&
+                file.Path.StartsWith(Constants.ContentFilesDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool HasIncludeExclude(IEnumerable<PackageDependencySet> dependencySets)
+        {
+            return dependencySets.Any(dependencyGroup => 
+                dependencyGroup.Dependencies
+                   .Any(dependency => dependency.Include != null || dependency.Exclude != null));
         }
 
         private static bool HasXdtTransformFile(ICollection<IPackageFile> contentFiles)
@@ -412,6 +443,7 @@ namespace NuGet
             Language = metadata.Language;
             Copyright = metadata.Copyright;
             MinClientVersion = metadata.MinClientVersion;
+            ContentFiles = new Collection<ManifestContentFiles>(manifestMetadata.ContentFiles);
 
             if (metadata.Tags != null)
             {
@@ -483,10 +515,13 @@ namespace NuGet
             if (_includeEmptyDirectories)
             {
                 // we only allow empty directories which are legit framework folders.
-                searchFiles.RemoveAll(file => file.TargetFramework == null &&
-                                              Path.GetFileName(file.TargetPath) == Constants.PackageEmptyFileName);
+                // Folders for nuget v3 should be included here also since this part of nuget.core is still used 
+                // by nuget.exe 3.3.0.
+                searchFiles.RemoveAll(file => file.TargetFramework == null
+                                             && Path.GetFileName(file.TargetPath) == Constants.PackageEmptyFileName
+                                             && !IsKnownV3Folder(file.TargetPath));
             }
-            
+
             ExcludeFiles(searchFiles, basePath, exclude);
 
             if (!PathResolver.IsWildcardSearch(source) && !PathResolver.IsDirectoryPath(source) && !searchFiles.Any())
@@ -497,6 +532,48 @@ namespace NuGet
 
 
             Files.AddRange(searchFiles);
+        }
+
+        /// <summary>
+        /// Returns true if the path uses a known v3 folder root.
+        /// </summary>
+        private static bool IsKnownV3Folder(string targetPath)
+        {
+            if (targetPath != null)
+            {
+                var parts = targetPath.Split(
+                    new char[] { '\\', '/' },
+                    StringSplitOptions.RemoveEmptyEntries);
+
+                // exclude things in the root of the directory, this is not allowed
+                // for any of the v3 folders.
+                // example: an empty 'native' folder does not have a TxM and cannot be used.
+                if (parts.Length > 1)
+                {
+                    var topLevelDirectory = parts.FirstOrDefault();
+
+                    return KnownFoldersForV3.Any(folder =>
+                        folder.Equals(topLevelDirectory, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Folders used in NuGet v3 that are not used in NuGet.Core
+        /// </summary>
+        private static IEnumerable<string> KnownFoldersForV3
+        {
+            get
+            {
+                yield return "contentFiles";
+                yield return "ref";
+                yield return "runtimes";
+                yield return "native";
+                yield return "analyzers";
+                yield break;
+            }
         }
 
         private static void ExcludeFiles(List<PhysicalPackageFile> searchFiles, string basePath, string exclude)
@@ -517,7 +594,7 @@ namespace NuGet
 
         private static void CreatePart(Package package, string path, Stream sourceStream)
         {
-            if (PackageHelper.IsManifest(path))
+            if (PackageHelper.IsPackageManifest(path, ZipPackage.GetPackageIdentifier(package)))
             {
                 return;
             }
