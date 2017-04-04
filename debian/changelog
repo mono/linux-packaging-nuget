@@ -1,3 +1,9 @@
+nuget (2.12+mono-0xamarin5) alpha; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Tue, 04 Apr 2017 15:25:24 +0000
+
 nuget (2.12+mono-0xamarin4) alpha; urgency=medium
 
   * Packaging bugfix:
