@@ -24,7 +24,7 @@ Source0:        nuget_%{version}.orig.tar.bz2
 Source1:	nuget-core.pc
 Source2:	nuget.sh
 Source3:	build-minimal.sh
-Patch0:		fix_xdt_hintpath
+Patch0:		fix_xdt_hintpath.patch
 BuildRequires:  mono-devel
 BuildArch:      noarch
 
