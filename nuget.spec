@@ -14,7 +14,7 @@
 
 Name:           nuget
 Version:	4.3.0.4406.bin
-Release:	0.xamarin.2
+Release:	0.xamarin.3
 Summary:        Package manager for NuGet repositories
 License:        MIT
 Group:          Development/Libraries/Other
