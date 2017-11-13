@@ -43,7 +43,7 @@ repository used by all package authors and consumers.
 %{?env_options}
 %{__mkdir_p} %{buildroot}%{_prefix}/lib/nuget
 %{__mkdir_p} %{buildroot}%{_bindir}
-%{__install} -m0755 %{SOURCE1} %{buildroot}%{_bindir}/`basename -s .sh %{SOURCE2}`
+%{__install} -m0755 %{SOURCE1} %{buildroot}%{_bindir}/`basename -s .sh %{SOURCE1}`
 sed -i -e 's/cli/mono/' %{buildroot}%{_bindir}/*
 %{__install} -m0755 nuget.exe %{buildroot}%{_prefix}/lib/nuget/
 
