@@ -11,7 +11,7 @@ Vcs-Browser: http://git.debian.org/?p=pkg-cli-libs/packages/nuget.git
 
 Package: nuget
 Architecture: all
-Depends: libnuget-core-cil (= ${binary:Version}), ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}
 Description: Package manager for NuGet repos - executable
  NuGet is the package manager for the Microsoft
  development platform including .NET. The NuGet client 
@@ -20,28 +20,3 @@ Description: Package manager for NuGet repos - executable
  repository used by all package authors and consumers.
  .
  This package contains the main NuGet binary.
-
-Package: libnuget-core-cil
-Architecture: all
-Depends: ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}
-Description: Package manager for NuGet repos - library
- NuGet is the package manager for the Microsoft
- development platform including .NET. The NuGet client 
- tools provide the ability to produce and consume 
- packages. The NuGet Gallery is the central package 
- repository used by all package authors and consumers.
- .
- This package contains the NuGet.Core library
-
-Package: libnuget-core-cil-dev
-Architecture: all
-Depends: libnuget-core-cil (= ${binary:Version}), ${cli:Depends}, ${shlibs:Depends}, ${misc:Depends}
-Description: Package manager for NuGet repos - development
- NuGet is the package manager for the Microsoft
- development platform including .NET. The NuGet client 
- tools provide the ability to produce and consume 
- packages. The NuGet Gallery is the central package 
- repository used by all package authors and consumers.
- .
- This package contains development files for the
- NuGet.Core library.
