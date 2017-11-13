@@ -11,5 +11,8 @@ override_dh_install:
 	dh_install
 	install -D -m 755 debian/nuget.sh debian/nuget/usr/bin/nuget
 
+override_dh_clideps:
+	dh_clideps --exclude-moduleref=wintrust.dll
+
 override_dh_clean:
 	dh_clean
