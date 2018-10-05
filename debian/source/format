@@ -1,1 +1,21 @@
 3.0 (quilt)
+By default, ?NuGet is configured with the main nuget.org package repository. 
+An app's build system includes a "nuget restore" invocation (usually in the .csproj) which will parse
+the list of packages in the packages.config file in the project source, download from any available 
+repository (including dependencies), and unpack into the packages/ folder. 
+Assembly references in the software's .csproj will reference the assemblies in packages/
+directhex@marceline:~/Projects/monodevelop/main/external/fsharpbinding/monodevelop/MonoDevelop.FSharpBinding$ nuget restore MonoDevelop.FSharp.mac-linux.sln 
+Installing 'Fantomas 1.4.0'.
+Successfully installed 'Fantomas 1.4.0'.
+Installing 'FSharp.Compiler.Service 0.0.60'.
+Installing 'Mono.Cecil 0.9.5.4'.
+Successfully installed 'Mono.Cecil 0.9.5.4'.
+Installing 'FSharp.Compiler.Service 0.0.57'.
+Successfully installed 'FSharp.Compiler.Service 0.0.60'.
+Installing 'FsUnit 1.2.1.0'.
+Successfully installed 'FsUnit 1.2.1.0'.
+Installing 'NUnit 2.6.2'.
+Successfully installed 'NUnit 2.6.2'.
+Successfully installed 'FSharp.Compiler.Service 0.0.57'.
+Adapting NuGet for Debian
+For Debian use, we need to support offline operation entirely. Our builders do not support internet access during builds, so cannot download .nupkg files.
