@@ -14,7 +14,7 @@
 
 Name:           nuget
 Version:	4.8.2.5835.bin
-Release:	0.xamarin.1
+Release:	0.xamarin.2
 Summary:        Package manager for NuGet repositories
 License:        MIT
 Group:          Development/Libraries/Other
