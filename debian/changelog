@@ -1,3 +1,9 @@
+nuget (5.0.0.5923.bin-0xamarin1) preview; urgency=medium
+
+  * New release - nuget-5.0.0.5923.bin.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 18 Apr 2019 17:26:41 +0000
+
 nuget (4.8.2.5835.bin-0xamarin1) preview; urgency=medium
 
   * New release - nuget-4.8.2.5835.bin.tar.xz
