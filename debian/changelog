@@ -1,3 +1,9 @@
+nuget (5.5.0.6382.bin-0xamarin1) preview; urgency=medium
+
+  * New release - nuget-5.5.0.6382.bin.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Mon, 11 May 2020 15:54:21 +0000
+
 nuget (5.5.0.6319.bin-0xamarin4) preview; urgency=medium
 
   * Packaging bugfix:
