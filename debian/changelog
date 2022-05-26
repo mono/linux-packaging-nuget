@@ -1,3 +1,9 @@
+nuget (5.9.0.7134.bin-0xamarin1) preview; urgency=medium
+
+  * New release - nuget-5.9.0.7134.bin.tar.xz
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Thu, 26 May 2022 15:50:07 +0000
+
 nuget (5.6.0.6489.bin-0xamarin1) preview; urgency=medium
 
   * New release - nuget-5.6.0.6489.bin.tar.xz
